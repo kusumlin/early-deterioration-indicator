@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.metrics import classification_report, roc_auc_score
 
 from data.generate_data import generate_dataset
@@ -62,7 +62,18 @@ def main():
     results["deteriorated"] = y_test.values
 
     auroc = roc_auc_score(y_test, results["edi_probability"])
-    print(f"\n      AUROC: {auroc:.4f}")
+    print(f"\n      Hold-out AUROC : {auroc:.4f}")
+
+    # 5-fold cross-validation
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    cv_scores = []
+    for fold, (tr, val) in enumerate(cv.split(X, y), 1):
+        fold_scorer = EDIScorer()
+        fold_scorer.fit(X.iloc[tr], y.iloc[tr])
+        fold_probs = fold_scorer.predict_proba(X.iloc[val])
+        cv_scores.append(roc_auc_score(y.iloc[val], fold_probs))
+    print(f"      5-Fold CV AUROC: {np.mean(cv_scores):.4f} ± {np.std(cv_scores):.4f}")
+
     print("\n      Classification Report (threshold = 0.5):")
     preds = (results["edi_probability"] >= 0.5).astype(int)
     print(classification_report(y_test, preds, target_names=["Stable", "Deteriorating"]))

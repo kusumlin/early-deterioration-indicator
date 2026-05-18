@@ -58,12 +58,13 @@ EDI/
 
 | Metric | Value |
 |--------|-------|
-| AUROC | 0.999 |
-| Accuracy | 99% |
-| Precision (Deteriorating) | 97% |
-| Recall (Deteriorating) | 96% |
+| AUROC (hold-out) | 0.896 |
+| 5-Fold CV AUROC | 0.883 ± 0.027 |
+| Accuracy | 88% |
+| Precision (Deteriorating) | 66% |
+| Recall (Deteriorating) | 49% |
 
-*Note: Performance on real ICU data (e.g. MIMIC-IV) would realistically be 0.75–0.85 AUROC, consistent with published EDI literature.*
+*Synthetic data tuned to match real ICU class overlap. Expected AUROC on MIMIC-IV: 0.75–0.85, consistent with published EDI literature.*
 
 ## References
 

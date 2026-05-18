@@ -11,23 +11,33 @@ import pandas as pd
 def generate_dataset(n_patients: int = 1000, seed: int = 42) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
 
-    # Stable vital distributions (mean, std) from literature
+    # Stable vital distributions with realistic measurement noise
     hr_stable   = rng.normal(80, 12, n_patients)
-    rr_stable   = rng.normal(16, 3, n_patients)
+    rr_stable   = rng.normal(16, 3,  n_patients)
     sbp_stable  = rng.normal(120, 15, n_patients)
     temp_stable = rng.normal(37.0, 0.5, n_patients)
-    spo2_stable = rng.normal(97, 1.5, n_patients)
-    loc_stable  = rng.choice([0, 1], size=n_patients, p=[0.92, 0.08])  # 0=alert, 1=altered
+    spo2_stable = rng.normal(97, 2.0, n_patients)   # wider — SpO2 varies more in ICU
+    loc_stable  = rng.choice([0, 1], size=n_patients, p=[0.92, 0.08])
     age         = rng.normal(62, 15, n_patients).clip(18, 95)
 
-    # Deteriorating patient perturbations (applied to ~15%)
-    deteriorated = rng.random(n_patients) < 0.15
-    hr   = np.where(deteriorated, hr_stable  + rng.normal(25, 8, n_patients), hr_stable)
-    rr   = np.where(deteriorated, rr_stable  + rng.normal(8,  3, n_patients), rr_stable)
-    sbp  = np.where(deteriorated, sbp_stable - rng.normal(25, 10, n_patients), sbp_stable)
-    temp = np.where(deteriorated, temp_stable + rng.choice([-1, 1], n_patients) * rng.normal(1.2, 0.4, n_patients), temp_stable)
-    spo2 = np.where(deteriorated, spo2_stable - rng.normal(6, 2, n_patients), spo2_stable)
-    loc  = np.where(deteriorated, rng.choice([0, 1], n_patients, p=[0.4, 0.6]), loc_stable)
+    # ~15% deteriorating, ~5% borderline (mildly abnormal but not clearly deteriorating)
+    r = rng.random(n_patients)
+    deteriorated = r < 0.15
+    borderline   = (r >= 0.15) & (r < 0.20)
+
+    # Deteriorating: modest shifts + high variance → realistic class overlap
+    hr   = np.where(deteriorated, hr_stable  + rng.normal(7,  12, n_patients),
+           np.where(borderline,   hr_stable  + rng.normal(3,  9,  n_patients), hr_stable))
+    rr   = np.where(deteriorated, rr_stable  + rng.normal(3,  4,  n_patients),
+           np.where(borderline,   rr_stable  + rng.normal(1,  3,  n_patients), rr_stable))
+    sbp  = np.where(deteriorated, sbp_stable - rng.normal(10, 14, n_patients),
+           np.where(borderline,   sbp_stable - rng.normal(5,  9,  n_patients), sbp_stable))
+    temp = np.where(deteriorated, temp_stable + rng.choice([-1, 1], n_patients) * rng.normal(0.5, 0.5, n_patients),
+           np.where(borderline,   temp_stable + rng.choice([-1, 1], n_patients) * rng.normal(0.2, 0.3, n_patients), temp_stable))
+    spo2 = np.where(deteriorated, spo2_stable - rng.normal(3,  3,  n_patients),
+           np.where(borderline,   spo2_stable - rng.normal(1,  2,  n_patients), spo2_stable))
+    loc  = np.where(deteriorated, rng.choice([0, 1], n_patients, p=[0.75, 0.25]),
+           np.where(borderline,   rng.choice([0, 1], n_patients, p=[0.88, 0.12]), loc_stable))
 
     # Clip to physiologically plausible ranges
     hr   = hr.clip(30, 220)
