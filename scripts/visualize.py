@@ -8,6 +8,10 @@ Produces four plot types:
   4. Patient dashboard — waterfall of feature contributions for a single patient
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -17,7 +21,6 @@ from sklearn.metrics import roc_curve, auc
 
 from edi.risk_curves import RiskCurveModel, FEATURES, FEATURE_WEIGHTS
 
-# Feature display metadata: (label, physiological range, unit)
 FEATURE_META = {
     "hr":   ("Heart Rate",        (30, 180),   "bpm"),
     "rr":   ("Resp. Rate",        (4,  40),    "br/min"),
@@ -44,7 +47,6 @@ def plot_risk_curves(risk_model: RiskCurveModel, save_path: str = "output/risk_c
         x = np.linspace(lo, hi, 300)
         risk = risk_model.feature_risk(feat, x)
 
-        # Shade risk zones
         thresholds = [lo, lo + (hi - lo) * 0.25, lo + (hi - lo) * 0.5, lo + (hi - lo) * 0.75, hi]
         for j, color in enumerate(ZONE_COLORS):
             ax.axvspan(thresholds[j], thresholds[j + 1], alpha=0.08, color=color)
@@ -71,7 +73,6 @@ def plot_edi_distribution(results: pd.DataFrame, save_path: str = "output/edi_di
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
     fig.suptitle("EDI Probability Distribution", fontsize=14, fontweight="bold")
 
-    # Histogram by true label
     ax = axes[0]
     stable = results[results["deteriorated"] == 0]["edi_probability"]
     deteri = results[results["deteriorated"] == 1]["edi_probability"]
@@ -84,7 +85,6 @@ def plot_edi_distribution(results: pd.DataFrame, save_path: str = "output/edi_di
     ax.legend()
     ax.grid(True, alpha=0.3)
 
-    # Risk level pie chart
     ax2 = axes[1]
     counts = results["risk_level"].value_counts()
     pie_colors = {"LOW": "#2ecc71", "MODERATE": "#f1c40f", "HIGH": "#e67e22", "CRITICAL": "#e74c3c"}
@@ -123,7 +123,6 @@ def plot_roc_curve(results: pd.DataFrame, save_path: str = "output/roc_curve.png
 
 def plot_patient_dashboard(patient_result: dict, patient_id: int = 1,
                            save_path: str = "output/patient_dashboard.png"):
-    """Waterfall chart showing each feature's contribution to the EDI score."""
     contributions = patient_result["feature_contributions"]
     feats = list(contributions.keys())
     vals  = list(contributions.values())
@@ -133,18 +132,16 @@ def plot_patient_dashboard(patient_result: dict, patient_id: int = 1,
     fig = plt.figure(figsize=(14, 6))
     gs = GridSpec(1, 3, figure=fig, width_ratios=[2, 1, 1])
 
-    # Waterfall
     ax1 = fig.add_subplot(gs[0])
     bars = ax1.barh(feats, vals, color=colors, edgecolor="white", height=0.6)
     ax1.axvline(0, color="black", linewidth=1)
     for bar, val in zip(bars, vals):
         ax1.text(val + (0.05 if val >= 0 else -0.05), bar.get_y() + bar.get_height() / 2,
                  f"{val:+.3f}", va="center", ha="left" if val >= 0 else "right", fontsize=9)
-    ax1.set_xlabel("Log-Ratio Contribution (+ = destabilizing)", fontsize=10)
+    ax1.set_xlabel("Log-Ratio Contribution (positive = worse)", fontsize=10)
     ax1.set_title("Feature Contributions to EDI Score", fontsize=11, fontweight="bold")
     ax1.grid(True, axis="x", alpha=0.3)
 
-    # EDI gauge
     ax2 = fig.add_subplot(gs[1])
     prob = patient_result["edi_probability"]
     level = patient_result["risk_level"]
@@ -160,7 +157,6 @@ def plot_patient_dashboard(patient_result: dict, patient_id: int = 1,
              fontweight="bold", color=gauge_color, transform=ax2.transAxes)
     ax2.grid(True, axis="x", alpha=0.3)
 
-    # Legend
     ax3 = fig.add_subplot(gs[2])
     ax3.axis("off")
     patches = [mpatches.Patch(color=c, label=l) for c, l in zip(ZONE_COLORS, ZONE_LABELS)]

@@ -1,18 +1,21 @@
 """
 EDI Business Report Generator
 ------------------------------
-Reads edi.db and writes a plain-text + markdown report with:
+Reads edi.db and writes a markdown report with:
 - Executive summary
 - Key KPIs
 - Risk stratification findings
 - Clinical interpretation
 - Recommendations
 
-Mirrors what a DA would deliver to clinical stakeholders.
+Run from project root: python scripts/report.py
 """
 
-import sqlite3
+import sys
 import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+import sqlite3
 import pandas as pd
 from datetime import datetime
 from sklearn.metrics import roc_auc_score, classification_report
@@ -94,9 +97,7 @@ def generate_report(db_path: str = DB_PATH, out_path: str = REPORT_PATH):
     ]
 
     if auroc:
-        lines += [
-            f"| AUROC | **{auroc:.4f}** |",
-        ]
+        lines += [f"| AUROC | **{auroc:.4f}** |"]
 
     lines += [
         "",

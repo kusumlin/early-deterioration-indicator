@@ -40,16 +40,18 @@ streamlit run dashboard.py
 
 ```
 EDI/
-├── edi/                  # Core ML modules
-│   ├── risk_curves.py    # Naive Bayes per-feature risk curves
-│   ├── edi_scorer.py     # Logistic regression → EDI probability
-│   └── alert_engine.py   # Vitals update + alert generation
-├── pipeline/             # ETL: ingest → clean → store
-├── sql/                  # Schema + analytical queries
-├── dashboard.py          # Streamlit dashboard (Nurse + Doctor views)
-├── pipeline.py           # End-to-end pipeline runner
-├── report.py             # Auto business report generator
-└── main.py               # ML demo + visualizations
+├── edi/                      # Core ML modules
+│   ├── risk_curves.py        # Naive Bayes per-feature risk curves
+│   ├── edi_scorer.py         # Logistic regression → EDI probability
+│   └── alert_engine.py       # Vitals update + alert generation
+├── pipeline/                 # ETL: ingest → clean → store
+├── scripts/                  # Helper scripts
+│   ├── main.py               # ML demo + visualizations
+│   ├── visualize.py          # Plot generation
+│   └── report.py             # Business report generator
+├── sql/                      # Schema + analytical queries
+├── dashboard.py              # Streamlit dashboard (Nurse + Doctor views)
+└── pipeline.py               # End-to-end pipeline runner
 ```
 
 ## Model Performance (synthetic data)

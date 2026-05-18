@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from pipeline import ingest, clean, store_to_db
 from edi import EDIScorer
 from edi.risk_curves import FEATURES
-from report import generate_report
+from scripts.report import generate_report
 
 
 def run_pipeline():
