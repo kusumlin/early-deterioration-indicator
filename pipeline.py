@@ -12,6 +12,7 @@ Runs the full DE/DS workflow:
 
 import sys
 import os
+import argparse
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
@@ -24,13 +25,13 @@ from edi.risk_curves import FEATURES
 from scripts.report import generate_report
 
 
-def run_pipeline():
+def run_pipeline(source: str = "auto", mimic_path: str = None):
     print("=" * 60)
     print("  EDI Pipeline Starting")
     print("=" * 60)
 
     # 1. Ingest
-    raw = ingest(source="auto")
+    raw = ingest(source=source, mimic_path=mimic_path)
 
     # 2. Clean
     cleaned = clean(raw)
@@ -71,4 +72,11 @@ def run_pipeline():
 
 
 if __name__ == "__main__":
-    run_pipeline()
+    parser = argparse.ArgumentParser(description="EDI Pipeline")
+    parser.add_argument("--source", default="auto",
+                        choices=["auto", "generate", "csv", "mimic"],
+                        help="Data source (default: auto)")
+    parser.add_argument("--mimic-path", default=None,
+                        help="Path to MIMIC-IV root folder (required when --source mimic)")
+    args = parser.parse_args()
+    run_pipeline(source=args.source, mimic_path=args.mimic_path)

@@ -1,5 +1,5 @@
 """
-Ingest layer — loads raw patient vitals from CSV or generates synthetic data.
+Ingest layer — loads raw patient vitals from CSV, MIMIC-IV, or generates synthetic data.
 In a real DE setting this would pull from an S3 bucket, Kafka stream, or HL7 feed.
 """
 
@@ -8,12 +8,23 @@ import pandas as pd
 from data.generate_data import generate_dataset
 
 
-def ingest(source: str = "auto", csv_path: str = "data/patients.csv") -> pd.DataFrame:
+def ingest(
+    source: str = "auto",
+    csv_path: str = "data/patients.csv",
+    mimic_path: str = None,
+) -> pd.DataFrame:
     """
-    source='auto'  → use CSV if it exists, otherwise generate synthetic data
-    source='csv'   → always load from csv_path
+    source='auto'     → use CSV if it exists, otherwise generate synthetic data
+    source='csv'      → always load from csv_path
     source='generate' → always generate fresh synthetic data
+    source='mimic'    → load from MIMIC-IV (requires mimic_path)
     """
+    if source == "mimic":
+        if not mimic_path:
+            raise ValueError("mimic_path is required when source='mimic'")
+        from data.mimic_loader import load_mimic
+        return load_mimic(mimic_path)
+
     if source == "csv" or (source == "auto" and os.path.exists(csv_path)):
         df = pd.read_csv(csv_path)
         print(f"[Ingest] Loaded {len(df)} records from {csv_path}")

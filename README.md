@@ -29,12 +29,21 @@ Flags at-risk ICU patients early using Naive Bayes risk curves and logistic regr
 bash setup.sh
 source .venv/bin/activate
 
-# 2. Run ETL pipeline (generates data, trains model, populates DB, writes report)
+# 2. Run with synthetic data (default)
 python pipeline.py
+
+# 2b. Run with real MIMIC-IV data (after getting access)
+python pipeline.py --source mimic --mimic-path /path/to/mimic-iv-2.2
 
 # 3. Launch dashboard
 streamlit run dashboard.py
 ```
+
+### Getting MIMIC-IV Access
+1. Create an account at [physionet.org](https://physionet.org)
+2. Complete the CITI "Data or Specimens Only Research" training (~2 hrs, free)
+3. Sign the data use agreement on the [MIMIC-IV page](https://physionet.org/content/mimiciv/)
+4. Download and unzip — pass the root folder to `--mimic-path`
 
 ## Project Structure
 
